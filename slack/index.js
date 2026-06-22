@@ -86,6 +86,22 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Root route so browser doesn't show "Cannot GET /"
+app.get('/', (req, res) => {
+  res.send(`
+    <html>
+      <body style="font-family: sans-serif; padding: 2rem; text-align: center;">
+        <h2>💬 Slack Integration Microservice (Team 06)</h2>
+        <p>The microservice is running successfully!</p>
+        <p>Active Endpoints:</p>
+        <code>GET /health</code><br>
+        <code>POST /api/slack/welcome</code><br>
+        <code>POST /api/slack/hr-notification</code>
+      </body>
+    </html>
+  `);
+});
+
 // 2. Send Team Welcome Message
 app.post('/api/slack/welcome', async (req, res) => {
   const { employeeName, role, department, startDate, onboardingId, initiatedBy, email } = req.body;
