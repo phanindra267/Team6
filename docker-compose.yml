@@ -66,6 +66,7 @@ services:
       SLACK_MOCK_MODE: ${SLACK_MOCK_MODE:-true}
       SLACK_WEBHOOK_TEAM: ${SLACK_WEBHOOK_TEAM:-}
       SLACK_WEBHOOK_HR: ${SLACK_WEBHOOK_HR:-}
+      SLACK_MICROSERVICE_URL: ${SLACK_MICROSERVICE_URL:-https://onboarding-slack-165702703956.asia-south2.run.app}
       RATE_LIMIT_MAX: 200
       RATE_LIMIT_WINDOW_MS: 900000
     ports:
