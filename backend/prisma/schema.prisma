@@ -1,0 +1,32 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model OnboardingRequest {
+  id                 String   @id @default(uuid()) @db.Uuid
+  request_id         String   @unique @db.VarChar(255)
+  employee_email     String   @unique @db.VarChar(255)
+  sf_employee_id     String?  @db.VarChar(255)
+  first_name         String   @db.VarChar(255)
+  last_name          String   @db.VarChar(255)
+  phone              String   @db.VarChar(50)
+  department         String   @db.VarChar(255)
+  designation        String   @db.VarChar(255)
+  manager            String   @db.VarChar(255)
+  joining_date       DateTime
+  initiated_by       String   @db.VarChar(255)
+  status             String   @db.VarChar(50) // PROCESSING, COMPLETED, FAILED
+  sf_write_status    String   @db.VarChar(50) // PENDING, SUCCESS, FAILED
+  team_slack_status  String   @db.VarChar(50) // PENDING, SUCCESS, FAILED
+  hr_slack_status    String   @db.VarChar(50) // PENDING, SUCCESS, FAILED
+  error_message      String?  @db.Text
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  @@map("onboarding_requests")
+}

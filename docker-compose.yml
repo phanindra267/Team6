@@ -1,0 +1,113 @@
+version: '3.9'
+
+services:
+  # ── PostgreSQL Database ────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: team06_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-onboarding_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - team06_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-onboarding_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ── Redis (BullMQ Queue Backend) ───────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: team06_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - team06_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── Express Backend API ────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: team06_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-onboarding_db}?schema=public
+      REDIS_URL: redis://redis:6379
+      SF_MOCK_MODE: ${SF_MOCK_MODE:-true}
+      SF_API_URL: ${SF_API_URL:-https://api.successfactors.com}
+      SF_CLIENT_ID: ${SF_CLIENT_ID:-mock-client-id}
+      SF_PRIVATE_KEY: ${SF_PRIVATE_KEY:-mock-private-key}
+      SLACK_MOCK_MODE: ${SLACK_MOCK_MODE:-true}
+      SLACK_WEBHOOK_TEAM: ${SLACK_WEBHOOK_TEAM:-}
+      SLACK_WEBHOOK_HR: ${SLACK_WEBHOOK_HR:-}
+      RATE_LIMIT_MAX: 200
+      RATE_LIMIT_WINDOW_MS: 900000
+    ports:
+      - "5000:5000"
+    networks:
+      - team06_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5000/api/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # ── React Frontend (Nginx SPA) ─────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: team06_frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    networks:
+      - team06_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:80 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+# ── Named Volumes ──────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# ── Network ────────────────────────────────────────────────────────────────────
+networks:
+  team06_network:
+    driver: bridge
