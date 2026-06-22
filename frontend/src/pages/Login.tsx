@@ -29,12 +29,15 @@ export const Login = () => {
     // Simulate a secure backend authentication delay
     await new Promise(resolve => setTimeout(resolve, 1500));
 
-    // For the hackathon, we allow any login but extract the name from the email
-    const namePart = email.split('@')[0];
-    const firstName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+    // Validate credentials
+    if (email.trim() !== 'admin@integrtr.com' || password !== 'password123') {
+      toast.error('Invalid email or password.');
+      setIsLoading(false);
+      return;
+    }
 
     const userData = {
-      firstName: firstName || 'Admin',
+      firstName: 'Admin',
       lastName: 'User',
       email: email.trim(),
     };
