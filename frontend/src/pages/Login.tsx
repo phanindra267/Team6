@@ -29,16 +29,20 @@ export const Login = () => {
     // Simulate a secure backend authentication delay
     await new Promise(resolve => setTimeout(resolve, 1500));
 
-    // Validate credentials
-    if (email.trim() !== 'admin@integrtr.com' || password !== 'password123') {
-      toast.error('Invalid email or password.');
+    // Validate password length to make it feel secure
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters long.');
       setIsLoading(false);
       return;
     }
 
+    // Extract first name from email
+    const namePart = email.split('@')[0];
+    const firstName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+
     const userData = {
-      firstName: 'Admin',
-      lastName: 'User',
+      firstName: firstName || 'User',
+      lastName: '',
       email: email.trim(),
     };
 
