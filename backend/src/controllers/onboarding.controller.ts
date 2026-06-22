@@ -9,7 +9,7 @@ export const createOnboardingSchema = z.object({
   requestId: z.string().min(1, 'requestId is required'),
   firstName: z.string().min(1, 'firstName is required'),
   lastName: z.string().min(1, 'lastName is required'),
-  email: z.string().email('Invalid email address'),
+  email: z.string().email('Invalid email address').optional(),
   phone: z.string().min(5, 'phone is required'),
   department: z.string().min(1, 'department is required'),
   designation: z.string().min(1, 'designation is required'),

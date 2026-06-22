@@ -10,7 +10,7 @@ generator client {
 model OnboardingRequest {
   id                 String   @id @default(uuid()) @db.Uuid
   request_id         String   @unique @db.VarChar(255)
-  employee_email     String   @unique @db.VarChar(255)
+  employee_email     String?  @db.VarChar(255)
   sf_employee_id     String?  @db.VarChar(255)
   first_name         String   @db.VarChar(255)
   last_name          String   @db.VarChar(255)

@@ -105,7 +105,7 @@ export const Dashboard: React.FC = () => {
           </Link>
           <Link 
             to="/failures" 
-            className="glow-btn flex items-center space-x-2 bg-white/5 hover:bg-white/10 text-slate-300 px-4 py-2.5 text-sm font-semibold border border-white/10"
+            className="glow-btn flex items-center space-x-2 glass-card hover:bg-white/10 text-slate-300 px-4 py-2.5 text-sm font-semibold border border-white/10"
           >
             <Activity className="h-4 w-4" />
             <span>Failure Monitor</span>

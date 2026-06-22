@@ -8,7 +8,7 @@ export interface CreateOnboardingInput {
   requestId: string;
   firstName: string;
   lastName: string;
-  email: string;
+  email?: string;
   phone: string;
   department: string;
   designation: string;
@@ -31,7 +31,7 @@ export class OnboardingService {
    * Find onboarding request by email.
    */
   async getRequestByEmail(email: string): Promise<OnboardingRequest | null> {
-    return prisma.onboardingRequest.findUnique({
+    return prisma.onboardingRequest.findFirst({
       where: { employee_email: email },
     });
   }
@@ -49,15 +49,17 @@ export class OnboardingService {
    * Initialize or retrieve a request (Idempotent creation).
    */
   async createOnboardingRequest(input: CreateOnboardingInput): Promise<{ request: OnboardingRequest; isDuplicate: boolean }> {
-    logger.info(`[OnboardingService] Received onboarding request. ID: ${input.requestId}, Email: ${input.email}`);
+    logger.info(`[OnboardingService] Received onboarding request. ID: ${input.requestId}, Email: ${input.email || 'N/A'}`);
 
     // Idempotency: Lock/Check DB. Check by request_id OR employee_email to prevent duplicates.
+    const orConditions: any[] = [{ request_id: input.requestId }];
+    if (input.email) {
+      orConditions.push({ employee_email: input.email });
+    }
+
     const existingRequest = await prisma.onboardingRequest.findFirst({
       where: {
-        OR: [
-          { request_id: input.requestId },
-          { employee_email: input.email },
-        ],
+        OR: orConditions,
       },
     });
 
@@ -108,13 +110,13 @@ export class OnboardingService {
         logger.info(`[Saga Step 1] SAP SuccessFactors integration starting for ${request.employee_email}`);
         
         // Check if employee already exists in SuccessFactors by doing email lookup
-        let sfUser = await successFactorsService.lookupEmployeeByEmail(request.employee_email);
+        let sfUser = await successFactorsService.lookupEmployeeByEmail(request.employee_email || "");
         
         if (!sfUser) {
           sfUser = await successFactorsService.createEmployee({
             firstName: request.first_name,
             lastName: request.last_name,
-            email: request.employee_email,
+            email: request.employee_email || "",
             phone: request.phone,
             department: request.department,
             designation: request.designation,
@@ -156,7 +158,7 @@ export class OnboardingService {
           request.last_name,
           request.department,
           request.joining_date,
-          request.employee_email
+          request.employee_email || ""
         );
 
         request = await prisma.onboardingRequest.update({
@@ -194,7 +196,7 @@ export class OnboardingService {
           request.sf_employee_id,
           request.department,
           request.joining_date,
-          request.employee_email
+          request.employee_email || ""
         );
 
         request = await prisma.onboardingRequest.update({

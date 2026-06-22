@@ -68,7 +68,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Sidebar Navigation */}
       <aside className={`
-        fixed inset-y-0 left-0 z-40 w-64 glass-panel border-r border-white/10 flex flex-col justify-between transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:h-screen
+        fixed inset-y-0 left-0 z-40 w-64 glass-panel m-4 rounded-3xl flex flex-col justify-between transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:h-[calc(100vh-2rem)]
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div>
@@ -132,7 +132,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             
             <button 
               onClick={handleLogout}
-              className="w-full py-2 flex items-center justify-center space-x-2 rounded-lg text-sm font-medium text-slate-400 hover:text-rose-400 hover:bg-rose-400/10 transition-colors border border-transparent hover:border-rose-400/20"
+              className="w-full py-2.5 flex items-center justify-center space-x-2 rounded-xl text-sm font-medium text-white bg-rose-500/20 hover:bg-rose-500/40 border border-rose-500/30 transition-colors"
             >
               <span>Logout</span>
             </button>
