@@ -14,6 +14,7 @@ const envSchema = z.object({
   SF_MOCK_MODE: z.coerce.boolean().default(true),
   SLACK_WEBHOOK_TEAM: z.string().optional().default(''),
   SLACK_WEBHOOK_HR: z.string().optional().default(''),
+  SLACK_MICROSERVICE_URL: z.string().optional(),
   SLACK_MOCK_MODE: z.coerce.boolean().default(true),
   RATE_LIMIT_MAX: z.coerce.number().default(100),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(15 * 60 * 1000), // 15 mins

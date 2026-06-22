@@ -80,6 +80,25 @@ services:
       start_period: 40s
 
   # ── React Frontend (Nginx SPA) ─────────────────────────────────────────────
+  slack_service:
+    build:
+      context: ./slack
+    container_name: team06_slack
+    ports:
+      - "5001:5001"
+    environment:
+      - SLACK_MOCK_MODE=${SLACK_MOCK_MODE:-true}
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
+      - SLACK_WEBHOOK_TEAM=${SLACK_WEBHOOK_TEAM}
+      - SLACK_WEBHOOK_HR=${SLACK_WEBHOOK_HR}
+    networks:
+      - team06_network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
   frontend:
     build:
       context: ./frontend

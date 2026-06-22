@@ -3,14 +3,10 @@ import { env } from '../config/env';
 import { logger } from '../config/logger';
 
 export class SlackService {
-  private teamWebhookUrl: string;
-  private hrWebhookUrl: string;
-  private mockMode: boolean;
+  private microserviceUrl: string;
 
   constructor() {
-    this.teamWebhookUrl = env.SLACK_WEBHOOK_TEAM || '';
-    this.hrWebhookUrl = env.SLACK_WEBHOOK_HR || '';
-    this.mockMode = env.SLACK_MOCK_MODE || (!env.SLACK_WEBHOOK_TEAM && !env.SLACK_WEBHOOK_HR);
+    this.microserviceUrl = env.SLACK_MICROSERVICE_URL || 'http://slack_service:5001';
   }
 
   /**
@@ -18,26 +14,28 @@ export class SlackService {
    */
   async sendTeamNotification(firstName: string, lastName: string, department: string, joiningDate: Date, email: string): Promise<boolean> {
     const formattedDate = new Date(joiningDate).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+      year: 'numeric', month: 'long', day: 'numeric',
     });
 
-    const text = `[Team 06]\nWelcome ${firstName} ${lastName}\nDepartment: ${department}\nJoining Date: ${formattedDate}`;
-
-    logger.info(`[SlackService] Sending Team Onboarding alert for ${firstName} ${lastName}`);
-
-    if (this.mockMode || !this.teamWebhookUrl) {
-      return this.mockSend('Team', text, email);
-    }
+    logger.info(`[SlackService] Delegating Team notification for ${firstName} ${lastName} to Microservice...`);
 
     try {
-      await axios.post(this.teamWebhookUrl, { text }, { timeout: 5000 });
-      logger.info('[SlackService] Team notification sent successfully.');
+      const response = await axios.post(`${this.microserviceUrl}/api/slack/welcome`, {
+        employeeName: `${firstName} ${lastName}`,
+        role: 'New Hire',
+        department: department,
+        startDate: formattedDate,
+        onboardingId: `REQ-${Date.now()}`,
+        initiatedBy: 'System',
+        email: email
+      }, { timeout: 8000 });
+
+      logger.info(`[SlackService] Team notification delegated successfully. Microservice step: ${response.data.step}`);
       return true;
     } catch (error: any) {
-      logger.error(`[SlackService] Team notification failed: ${error.message}`);
-      throw new Error(`Slack Team notification failed: ${error.message}`);
+      const msg = error.response?.data?.error || error.message;
+      logger.error(`[SlackService] Microservice Team notification failed: ${msg}`);
+      throw new Error(`Slack Team notification failed: ${msg}`);
     }
   }
 
@@ -53,50 +51,31 @@ export class SlackService {
     email: string
   ): Promise<boolean> {
     const formattedDate = new Date(joiningDate).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+      year: 'numeric', month: 'long', day: 'numeric',
     });
 
-    // Deep link formula into SuccessFactors Employee Profile
     const sfDeepLink = `${env.SF_API_URL}/sf/liveprofile?username=${employeeId}`;
 
-    const text = `[Team 06]\nEmployee Onboarded\nEmployee ID: ${employeeId}\nDepartment: ${department}\nJoining Date: ${formattedDate}\nSuccessFactors Link: ${sfDeepLink}`;
-
-    logger.info(`[SlackService] Sending HR Onboarding notification for employee ID: ${employeeId}`);
-
-    if (this.mockMode || !this.hrWebhookUrl) {
-      return this.mockSend('HR', text, email);
-    }
+    logger.info(`[SlackService] Delegating HR notification for ID ${employeeId} to Microservice...`);
 
     try {
-      await axios.post(this.hrWebhookUrl, { text }, { timeout: 5000 });
-      logger.info('[SlackService] HR notification sent successfully.');
+      const response = await axios.post(`${this.microserviceUrl}/api/slack/hr-notification`, {
+        employeeName: `${firstName} ${lastName}`,
+        employeeId: employeeId,
+        onboardingId: `REQ-${Date.now()}`,
+        sfRecordUrl: sfDeepLink,
+        department: department,
+        startDate: formattedDate,
+        email: email
+      }, { timeout: 8000 });
+
+      logger.info(`[SlackService] HR notification delegated successfully. Microservice step: ${response.data.step}`);
       return true;
     } catch (error: any) {
-      logger.error(`[SlackService] HR notification failed: ${error.message}`);
-      throw new Error(`Slack HR notification failed: ${error.message}`);
+      const msg = error.response?.data?.error || error.message;
+      logger.error(`[SlackService] Microservice HR notification failed: ${msg}`);
+      throw new Error(`Slack HR notification failed: ${msg}`);
     }
-  }
-
-  private async mockSend(channel: 'Team' | 'HR', text: string, email: string): Promise<boolean> {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    
-    const lowerEmail = email.toLowerCase();
-    
-    // Inject mock failures
-    if (channel === 'Team' && lowerEmail.includes('fail-slack-team')) {
-      logger.warn(`[SlackService Mock] Injected Team channel post failure for ${email}`);
-      throw new Error('Slack connection timeout: Injected Team Slack mock failure.');
-    }
-    
-    if (channel === 'HR' && lowerEmail.includes('fail-slack-hr')) {
-      logger.warn(`[SlackService Mock] Injected HR channel post failure for ${email}`);
-      throw new Error('Slack Server Error (500): Injected HR Slack mock failure.');
-    }
-
-    logger.info(`[SlackService Mock] [Channel: ${channel}] Content:\n${text}`);
-    return true;
   }
 }
 
