@@ -4,7 +4,7 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
-  darkMode: 'class', // We use class-based dark mode (forced dark layout for this project)
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -14,13 +14,21 @@ export default {
           border: 'rgba(255, 255, 255, 0.08)',
         },
         primary: {
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
           50: '#f5f3ff',
           100: '#eedeff',
-          500: '#8b5cf6', // Purple
+          500: '#8b5cf6',
           600: '#7c3aed',
           700: '#6d28d9',
         },
+        secondary: {
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))',
+        },
         accent: {
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))',
           cyan: '#06b6d4',
           emerald: '#10b981',
           rose: '#f43f5e',

@@ -109,7 +109,7 @@ export const Login = () => {
               </>
             ) : (
               <>
-                <span>Sign In Securely</span>
+                <span>Enter Dashboard</span>
                 <LogIn className="w-5 h-5" />
               </>
             )}
